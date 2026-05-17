@@ -309,8 +309,11 @@
         /* ── TABLE VIEW ── */
         .db-content {
             flex: 1;
-            overflow-y: auto;
+            overflow: hidden;
             padding: 24px;
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 90px);
         }
 
         .leads-table-container {
@@ -318,8 +321,9 @@
             background: rgba(0, 0, 0, 0.2);
             border-radius: 16px;
             border: 1px solid var(--border);
-            overflow: hidden;
+            overflow-y: auto;
             display: none;
+            max-height: 100%;
         }
 
         .leads-table-container.active {
@@ -334,7 +338,10 @@
         }
 
         th {
-            background: rgba(255, 255, 255, 0.02);
+            position: sticky;
+            top: 0;
+            background: #141B2D;
+            z-index: 10;
             padding: 16px;
             font-weight: 600;
             color: var(--text-sub);
