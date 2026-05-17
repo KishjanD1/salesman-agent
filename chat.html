@@ -40,9 +40,9 @@
             display: grid;
             grid-template-columns: 420px 1fr;
             width: 100%;
-            max-width: 1200px;
+            max-width: 1300px;
             height: 100%;
-            max-height: 750px;
+            max-height: 780px;
             background: var(--panel-bg);
             border-radius: 28px;
             box-shadow: var(--shadow);
@@ -236,6 +236,37 @@
             margin-top: 2px;
         }
 
+        /* ── TABS SYSTEM ── */
+        .tab-navigation {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-right: 20px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            color: var(--text-sub);
+            border: none;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(27, 101, 214, 0.3);
+        }
+
         .db-actions {
             display: flex;
             gap: 12px;
@@ -288,6 +319,11 @@
             border-radius: 16px;
             border: 1px solid var(--border);
             overflow: hidden;
+            display: none;
+        }
+
+        .leads-table-container.active {
+            display: block;
         }
 
         table {
@@ -336,6 +372,17 @@
         .badge-type.emi_inquiry { background: rgba(245, 158, 11, 0.15); color: #FBBF24; }
         .badge-type.repair_inquiry { background: rgba(16, 185, 129, 0.15); color: #34D399; }
         .badge-type.exchange_inquiry { background: rgba(139, 92, 246, 0.15); color: #A78BFA; }
+
+        .stock-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .stock-badge.in-stock { background: rgba(16, 185, 129, 0.15); color: #34D399; }
+        .stock-badge.out-stock { background: rgba(239, 68, 68, 0.15); color: #EF4444; }
 
         .time-col {
             color: var(--text-sub);
@@ -444,17 +491,25 @@
             </div>
         </div>
 
-        <!-- ── RIGHT: SUPABASE LIVE LEADS VIEW ── -->
+        <!-- ── RIGHT: SUPABASE LIVE TABS VIEW ── -->
         <div class="db-panel">
             <div class="db-header">
                 <div class="db-title-group">
-                    <h1>Supabase Database leads</h1>
-                    <p>Real-time Captured Leads table (table: leads)</p>
+                    <h1 id="panel-title">Supabase Database Leads</h1>
+                    <p id="panel-desc">Real-time Captured Leads table (table: leads)</p>
                 </div>
                 <div class="db-actions">
+                    <div class="tab-navigation">
+                        <button class="tab-btn active" id="tab-leads" onclick="switchTab('leads')">
+                            📊 Live Leads
+                        </button>
+                        <button class="tab-btn" id="tab-catalog" onclick="switchTab('catalog')">
+                            📱 Inventory Stock
+                        </button>
+                    </div>
                     <div class="db-status">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-                        Supabase Connected
+                        Connected
                     </div>
                     <button class="btn-refresh" id="btn-refresh">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
@@ -464,7 +519,8 @@
             </div>
 
             <div class="db-content">
-                <div class="leads-table-container">
+                <!-- LEADS TABLE -->
+                <div class="leads-table-container active" id="container-leads">
                     <table id="leads-table">
                         <thead>
                             <tr>
@@ -477,19 +533,48 @@
                             </tr>
                         </thead>
                         <tbody id="leads-body">
-                            <!-- Injected by JS -->
+                            <!-- Injected dynamically -->
                         </tbody>
                     </table>
                     
-                    <div class="loading-overlay" id="db-loading">
+                    <div class="loading-overlay" id="leads-loading">
                         <div class="spinner"></div>
                         <span>Loading leads from Supabase...</span>
                     </div>
 
-                    <div class="empty-state" id="db-empty" style="display: none;">
+                    <div class="empty-state" id="leads-empty" style="display: none;">
                         <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
                         <h3>No leads captured yet</h3>
-                        <p>Try sharing your name and phone number with Bishal AI on the left!</p>
+                        <p>Share your name and phone number with Bishal AI on the left to test!</p>
+                    </div>
+                </div>
+
+                <!-- CATALOG TABLE -->
+                <div class="leads-table-container" id="container-catalog">
+                    <table id="catalog-table">
+                        <thead>
+                            <tr>
+                                <th>Brand</th>
+                                <th>Model Name</th>
+                                <th>Specs (RAM/ROM)</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody id="catalog-body">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                    </table>
+                    
+                    <div class="loading-overlay" id="catalog-loading">
+                        <div class="spinner"></div>
+                        <span>Loading mobile inventory from Supabase...</span>
+                    </div>
+
+                    <div class="empty-state" id="catalog-empty" style="display: none;">
+                        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                        <h3>Inventory is empty</h3>
+                        <p>Make sure the "mobile_models" table has items populated inside Supabase!</p>
                     </div>
                 </div>
             </div>
@@ -499,6 +584,7 @@
     <script>
         const API_URL = 'http://localhost:8000/api/chat';
         const LEADS_URL = 'http://localhost:8000/api/leads';
+        const CATALOG_URL = 'http://localhost:8000/api/catalog';
         const API_KEY = 'gIUOmaMUwrnyyNAmcqvmc9RAnYtHVi6hR0E4j3UJzWM';
         const sessionId = 'test_' + Math.random().toString(36).substring(7);
 
@@ -507,9 +593,7 @@
         const sendBtn = document.getElementById('send-btn');
         const refreshBtn = document.getElementById('btn-refresh');
         
-        const leadsBody = document.getElementById('leads-body');
-        const dbLoading = document.getElementById('db-loading');
-        const dbEmpty = document.getElementById('db-empty');
+        let currentTab = 'leads';
 
         // ── CHAT ENGINE ──
         function appendMessage(role, text, leadCaptured = false) {
@@ -520,11 +604,13 @@
             if (leadCaptured) {
                 const badge = document.createElement('div');
                 badge.className = 'lead-badge';
-                badge.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="display:inline;vertical-align:middle;margin-right:4px;"><path d="M20 6L9 17L4 12"/></svg>✓ Lead Saved to Supabase';
+                badge.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="display:inline;vertical-align:middle;margin-right:4px;"><path d="M20 6L9 17L4 12"/></svg>✓ Saved to Supabase (leads)';
                 div.appendChild(badge);
                 
-                // Auto-refresh the database when a lead is captured!
-                setTimeout(fetchLeads, 1500);
+                // Auto-refresh the leads table when a lead is captured
+                if (currentTab === 'leads') {
+                    setTimeout(fetchLeads, 1500);
+                }
             }
 
             messagesArea.appendChild(div);
@@ -538,7 +624,6 @@
             userInput.value = '';
             appendMessage('user', message);
             
-            // Show loading dots
             const loadingDiv = document.createElement('div');
             loadingDiv.className = 'message bot loading';
             loadingDiv.innerHTML = '<div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
@@ -568,7 +653,7 @@
                 }
             } catch (error) {
                 messagesArea.removeChild(loadingDiv);
-                appendMessage('bot', 'Error: Could not reach the server. Is main.py running on port 8000?');
+                appendMessage('bot', 'Error: Could not reach backend server. Is main.py running?');
             }
         }
 
@@ -577,33 +662,58 @@
             if (e.key === 'Enter') handleSend();
         });
 
-        // ── SUPABASE LEADS ENGINE ──
+        // ── TAB CONTROLLERS ──
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.leads-table-container').forEach(c => c.classList.remove('active'));
+            
+            const title = document.getElementById('panel-title');
+            const desc = document.getElementById('panel-desc');
+
+            if (tab === 'leads') {
+                document.getElementById('tab-leads').classList.add('active');
+                document.getElementById('container-leads').classList.add('active');
+                title.innerText = "Supabase Database Leads";
+                desc.innerText = "Real-time Captured Leads table (table: leads)";
+                fetchLeads();
+            } else {
+                document.getElementById('tab-catalog').classList.add('active');
+                document.getElementById('container-catalog').classList.add('active');
+                title.innerText = "Supabase Store Stock Inventory";
+                desc.innerText = "Live Store Product Catalog and Stock availability (table: mobile_models)";
+                fetchCatalog();
+            }
+        }
+
+        // ── FETCH LEADS ──
         async function fetchLeads() {
-            dbLoading.style.display = 'flex';
-            leadsBody.innerHTML = '';
-            dbEmpty.style.display = 'none';
+            const body = document.getElementById('leads-body');
+            const loading = document.getElementById('leads-loading');
+            const empty = document.getElementById('leads-empty');
+            
+            loading.style.display = 'flex';
+            body.innerHTML = '';
+            empty.style.display = 'none';
 
             try {
                 const response = await fetch(LEADS_URL, {
                     method: 'GET',
-                    headers: {
-                        'X-API-Key': API_KEY
-                    }
+                    headers: { 'X-API-Key': API_KEY }
                 });
 
-                if (!response.ok) throw new Error('Failed to fetch');
-
+                if (!response.ok) throw new Error('Fetch failed');
                 const data = await response.json();
-                dbLoading.style.display = 'none';
+                loading.style.display = 'none';
 
                 if (data.length === 0) {
-                    dbEmpty.style.display = 'block';
+                    empty.style.display = 'block';
                     return;
                 }
 
                 data.forEach(lead => {
                     const tr = document.createElement('tr');
-                    
                     const time = new Date(lead.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     const date = new Date(lead.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' });
 
@@ -615,12 +725,57 @@
                         <td style="color: #34D399; font-weight: 600;">${escapeHtml(lead.status)}</td>
                         <td class="time-col">${date}, ${time}</td>
                     `;
-                    leadsBody.appendChild(tr);
+                    body.appendChild(tr);
+                });
+            } catch (error) {
+                loading.style.display = 'none';
+                body.innerHTML = `<tr><td colspan="6" style="text-align:center; color: #EF4444; padding: 30px;">Error connecting to leads table. Make sure backend is running.</td></tr>`;
+            }
+        }
+
+        // ── FETCH CATALOG ──
+        async function fetchCatalog() {
+            const body = document.getElementById('catalog-body');
+            const loading = document.getElementById('catalog-loading');
+            const empty = document.getElementById('catalog-empty');
+            
+            loading.style.display = 'flex';
+            body.innerHTML = '';
+            empty.style.display = 'none';
+
+            try {
+                const response = await fetch(CATALOG_URL, {
+                    method: 'GET',
+                    headers: { 'X-API-Key': API_KEY }
                 });
 
+                if (!response.ok) throw new Error('Fetch failed');
+                const data = await response.json();
+                loading.style.display = 'none';
+
+                if (data.length === 0) {
+                    empty.style.display = 'block';
+                    return;
+                }
+
+                data.forEach(item => {
+                    const tr = document.createElement('tr');
+                    const priceFormatted = `NPR ${parseInt(item.official_price_npr).toLocaleString()}`;
+                    const stockClass = parseInt(item.stock) > 0 ? 'in-stock' : 'out-stock';
+                    const stockText = parseInt(item.stock) > 0 ? `In Stock (${item.stock})` : 'Out of Stock';
+
+                    tr.innerHTML = `
+                        <td style="font-weight: 600; color: #60A5FA;">${escapeHtml(item.brand)}</td>
+                        <td style="font-weight: 700;">${escapeHtml(item.model_name)}</td>
+                        <td style="color: var(--text-sub);">${escapeHtml(item.ram)} / ${escapeHtml(item.storage)}</td>
+                        <td style="font-weight: 700; color: #FBBF24;">${priceFormatted}</td>
+                        <td><span class="stock-badge ${stockClass}">${stockText}</span></td>
+                    `;
+                    body.appendChild(tr);
+                });
             } catch (error) {
-                dbLoading.style.display = 'none';
-                leadsBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: #EF4444; padding: 30px;">Error loading data from Supabase. Make sure main.py is running.</td></tr>`;
+                loading.style.display = 'none';
+                body.innerHTML = `<tr><td colspan="5" style="text-align:center; color: #EF4444; padding: 30px;">Error loading products catalog from Supabase.</td></tr>`;
             }
         }
 
@@ -629,9 +784,12 @@
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        refreshBtn.addEventListener('click', fetchLeads);
+        refreshBtn.addEventListener('click', () => {
+            if (currentTab === 'leads') fetchLeads();
+            else fetchCatalog();
+        });
 
-        // Load initially
+        // Initialize leads view
         fetchLeads();
     </script>
 </body>

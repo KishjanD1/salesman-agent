@@ -155,13 +155,36 @@ def save_lead_to_supabase(name, phone, lead_type, product_interest):
         logger.error(f"Supabase Error: {e}. Stored lead in local memory fallback.")
         return False
 
+def fetch_mobile_models_catalog() -> str:
+    try:
+        response = supabase_client.table("mobile_models").select("*").order("brand").execute()
+        if not response.data:
+            return "Catalog is currently empty."
+        
+        catalog_lines = []
+        for row in response.data:
+            line = f"- {row['brand']} {row['model_name']} ({row['ram']}/{row['storage']}) - Price: NPR {row['official_price_npr']:,} (Stock: {row['stock']})"
+            catalog_lines.append(line)
+        return "\n".join(catalog_lines)
+    except Exception as e:
+        logger.error(f"Catalog Load Error: {e}")
+        return "Various mobile phone models (iPhone, Samsung, Benco, Realme) are available."
+
 async def get_ai_response(message: str, session_id: str) -> str:
     session_history = _get_or_create_session(session_id)
+    
+    catalog_context = fetch_mobile_models_catalog()
+    dynamic_prompt = f"""
+{SYSTEM_PROMPT}
+
+OUR REAL-TIME STORE STOCK & PRODUCT SPECIFICATIONS (Always refer to these models and prices to answer customer inquiries):
+{catalog_context}
+""".strip()
     
     try:
         history = [{"role": "user" if m["role"] == "user" else "model", "parts": [m["content"]]} for m in session_history]
         chat_session = gemini_model.start_chat(history=history)
-        response = chat_session.send_message(f"{SYSTEM_PROMPT}\n\nUser: {message}")
+        response = chat_session.send_message(f"{dynamic_prompt}\n\nUser: {message}")
         return response.text
     except Exception as e:
         logger.error(f"Gemini Error: {e}")
@@ -187,6 +210,19 @@ async def get_leads(request: Request):
     except Exception as e:
         logger.error(f"Supabase Fetch Error: {e}. Stored in local fallback memory instead.")
         return local_leads_mock
+
+@app.get("/api/catalog")
+async def get_catalog(request: Request):
+    if API_SECRET_KEY:
+        provided_key = request.headers.get("x-api-key", "")
+        if not secrets.compare_digest(provided_key, API_SECRET_KEY):
+            raise HTTPException(status_code=401, detail="Invalid API key")
+    try:
+        response = supabase_client.table("mobile_models").select("*").order("brand").execute()
+        return response.data
+    except Exception as e:
+        logger.error(f"Supabase Catalog Fetch Error: {e}")
+        return []
 
 @app.post("/api/chat")
 async def chat(req: ChatRequest, request: Request):
