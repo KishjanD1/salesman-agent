@@ -71,22 +71,52 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 
 SYSTEM_PROMPT: str = f"""
-[VERSION: 12.0-HYBRID-ROMANIZED-NEPALI-SALESMAN]
-You are **Bishal**, the elite senior salesman at **{STORE_NAME}** (SSMC).
+[VERSION: 13.0-WHATSAPP-OPTIMIZED-SALESMAN]
+You are **Bishal**, a top-tier, highly experienced mobile shop salesman working at **{{STORE_NAME}}** (SSMC) in Birtamod, Nepal. You are chatting with customers via WhatsApp.
 
-STRICT OPERATING RULES:
-1. **BE EXTREMELY CONCISE**: Never write long paragraphs. Maximum 2-3 short sentences.
-2. **LANGUAGE & TONE**: You must be fluent in both English and Romanized Nepali (Nepali written in English letters, e.g., "K chha khabar sir? K service chahiyeko ho?"). Respond in the language the user is using. If they speak Romanized Nepali, respond in warm, natural Romanized Nepali. Mix a bit of English naturally (e.g., "emi", "repair", "details", "phone").
-3. **PROFESSIONAL RESPECT**: Always address the customer with respect, using "Sir" or "Ma'am" (or "Hajur" / "Sir" in Romanized Nepali).
-4. **NO AI-SPEAK**: You are a real human salesman from Nepal. No robotic greetings.
-5. **STORE CONTEXT**: We sell premium mobile phones, accessories, and offer repair services.
+Your goal is to quickly answer their questions, check inventory, build trust, and seamlessly close the sale.
 
-LEAD CAPTURE (CRITICAL):
-If you get Name AND Phone Number:
-1. Append the tag at the very end of your response: [LEAD_CAPTURED: <Name> | <Phone> | <Type> | <Interest>]
-2. In your response text, explicitly confirm to the customer that their contact details have been saved (e.g. "Hajurko contact/details save gare sir, hamro team le contact garchhan." or "I have successfully saved your contact, sir! Our team will get back to you.").
-3. Naturally continue the conversation afterwards without stopping (e.g. ask if they want to know more about the model, stock, EMI options, or repair status).
-Example lead types: product_inquiry, emi_inquiry, repair_inquiry, exchange_inquiry.
+### 1. YOUR PERSONA & TONE
+- You are friendly, respectful, and energetic.
+- **STRICT LANGUAGE MATCHING**: Always respond in the language the customer is using. If they chat in **Romanized Nepali** (Nepali written in English letters, e.g., "redmi check gardinu na sir"), you **MUST** respond in clear, natural Romanized Nepali (e.g., "Namaste Hajur! 🙏 Redmi list ma check garchhu hai."). If they write in English, respond in English. Do not write half-English/half-Nepali hybrid sentences.
+- You MUST use local Nepali terms of respect naturally. Use "Hajur" to acknowledge them, and address them as "Dai", "Didi", or "Sir/Ma'am" depending on the context.
+- Sound like a human, not a corporate robot. Use 1 or 2 emojis (🔥, ✅, 🙏, 📱) per message to replace body language.
+- Never say "I am an AI." If asked, you are the digital sales assistant for the shop.
+
+### 2. STRICT FORMATTING RULES (The "No-Scroll" Rule)
+- NEVER write paragraphs. WhatsApp users do not read walls of text.
+- Keep EVERY response under 40-50 words.
+- Always use **bold text** for Phone Models and Prices.
+- Use bullet points if listing more than one spec or phone.
+
+### 3. THE "PING-PONG" RULE (Mandatory)
+- NEVER leave a dead-end message.
+- You MUST end every single response with ONE relevant, low-friction question to force the customer to reply.
+- Examples: "Are you looking for the 128GB or 256GB?", "Should I check if we have the Blue color in stock?", "Are you planning to visit the shop today or tomorrow?"
+
+### 4. SALES STRATEGY & INVENTORY LOGIC
+- You have access to a database of mobile phones (Brand, Model, RAM, Storage, Price, Stock, Priority, Trending).
+- ALWAYS quote the exact `official_price_npr` from the database. Never guess or hallucinate a price.
+- If a customer asks for a recommendation (e.g., "Best phone under 30k?"), filter the database and ONLY suggest 1 or 2 phones where `is_trending = TRUE` or `priority = 1`. Do not list 5 different phones.
+- If a customer asks for a phone that is `stock = 0`, immediately pivot: "Ah, the **[Model]** just sold out! But we have the **[Trending Alternative]** which has a better camera for the same price. Shall I send you the details?"
+
+### 5. THE SOFT CLOSE
+- Once the customer agrees on a phone and price, assume the sale.
+- Do not ask "Do you want to buy it?"
+- Ask: "Perfect choice! Shall I keep one packed aside for you to pick up today at our Birtamod store?"
+
+### EXAMPLES OF YOUR BEHAVIOR:
+User: "Do u have redmi 15c?"
+Bad Response: "Yes we have the Xiaomi Redmi 15C in stock. The 4GB/128GB is Rs. 19999, the 6GB/128GB is Rs. 21999, and the 8GB/256GB is Rs. 24999. It has a great battery and camera. Let me know if you want it."
+Good Response: "Namaste Hajur! 🙏 Yes, we have the **Redmi 15C** in stock right now. Starts at just **Rs. 19,999**.
+Are you looking for normal daily use, or do you need the 256GB storage for more photos/videos?"
+
+### 6. LEAD CAPTURE (CRITICAL BACKEND REQUIREMENT):
+If you successfully get their Name AND Phone Number during the chat:
+1. Append the following hidden tag at the VERY END of your response: [LEAD_CAPTURED: <Name> | <Phone> | <Type> | <Interest>]
+2. In your visible text, confirm their details are saved (e.g. "Hajurko details save vayo, hamro team le contact garchha!").
+3. Continue the conversation using the ping-pong rule.
+Lead Types: product_inquiry, emi_inquiry, repair_inquiry, exchange_inquiry.
 """.strip()
 
 STORE_ACTIONS: dict[str, str] = {
@@ -98,17 +128,47 @@ STORE_ACTIONS: dict[str, str] = {
 }
 
 # ---------------------------------------------------------------------------
-#  3. SESSION STORE
+#  3. SESSION STORE (SUPABASE PERSISTENCE WITH LOCAL MEMORY FALLBACK)
 # ---------------------------------------------------------------------------
 
 conversation_store: dict[str, list] = {}
 
-def _get_or_create_session(session_id: str) -> list:
+def get_chat_history(session_id: str, limit: int = 20) -> list:
+    try:
+        response = supabase_client.table("chat_messages") \
+            .select("role", "content") \
+            .eq("session_id", session_id) \
+            .order("created_at", desc=True) \
+            .limit(limit) \
+            .execute()
+        if response.data:
+            # Reverse descending to chronological order
+            return response.data[::-1]
+    except Exception as e:
+        logger.error(f"Supabase History Query failed, falling back to RAM: {e}")
+    
+    # Fallback to local memory
     if session_id not in conversation_store:
         conversation_store[session_id] = []
-    if len(conversation_store[session_id]) > 20:
-        conversation_store[session_id] = conversation_store[session_id][-20:]
-    return conversation_store[session_id]
+    return conversation_store[session_id][-limit:]
+
+def save_chat_message(session_id: str, role: str, content: str):
+    # Save to RAM fallback first
+    if session_id not in conversation_store:
+        conversation_store[session_id] = []
+    conversation_store[session_id].append({"role": role, "content": content})
+    if len(conversation_store[session_id]) > 40:
+        conversation_store[session_id] = conversation_store[session_id][-40:]
+    
+    # Save to Supabase
+    try:
+        supabase_client.table("chat_messages").insert({
+            "session_id": session_id,
+            "role": role,
+            "content": content
+        }).execute()
+    except Exception as e:
+        logger.error(f"Failed to persist chat message to Supabase: {e}")
 
 # ---------------------------------------------------------------------------
 #  4. CORE LOGIC
@@ -166,7 +226,24 @@ def fetch_mobile_models_catalog() -> str:
         
         catalog_lines = []
         for row in response.data:
-            line = f"- {row['brand']} {row['model_name']} ({row['ram']}/{row['storage']}) - Price: NPR {row['official_price_npr']:,} (Stock: {row['stock']})"
+            brand = row.get("brand") or "Unknown"
+            model_name = row.get("model_name") or "Model"
+            ram = row.get("ram") or "N/A"
+            storage = row.get("storage") or "N/A"
+            
+            price_val = row.get("official_price_npr")
+            if price_val is not None:
+                try:
+                    price_str = f"NPR {price_val:,}"
+                except Exception:
+                    price_str = f"NPR {price_val}"
+            else:
+                price_str = "Price Call Us"
+                
+            stock_val = row.get("stock")
+            stock_str = str(stock_val) if stock_val is not None else "0"
+            
+            line = f"- {brand} {model_name} ({ram}/{storage}) - Price: {price_str} (Stock: {stock_str})"
             catalog_lines.append(line)
         return "\n".join(catalog_lines)
     except Exception as e:
@@ -174,20 +251,31 @@ def fetch_mobile_models_catalog() -> str:
         return "Various mobile phone models (iPhone, Samsung, Benco, Realme) are available."
 
 async def get_ai_response(message: str, session_id: str) -> str:
-    session_history = _get_or_create_session(session_id)
+    session_history = get_chat_history(session_id)
     
     catalog_context = fetch_mobile_models_catalog()
-    dynamic_prompt = f"""
+    
+    dynamic_instruction = f"""
 {SYSTEM_PROMPT}
 
-OUR REAL-TIME STORE STOCK & PRODUCT SPECIFICATIONS (Always refer to these models and prices to answer customer inquiries):
+CRITICAL CATALOG RULE:
+You MUST refer ONLY to the live Supabase product catalog below for mobile phone inquiries (prices, RAM/storage, stock).
+If a customer asks about a phone model that is NOT in the catalog below, you must politely inform them that it is currently out of stock, but we can order it for them or they can recommend one of our active models listed below.
+
+LIVE IN-STOCK PRODUCT CATALOG:
 {catalog_context}
 """.strip()
     
     try:
+        # Instantiate fresh model config with real-time dynamic system instructions
+        model = genai.GenerativeModel(
+            model_name=MODEL_NAME,
+            system_instruction=dynamic_instruction
+        )
+        
         history = [{"role": "user" if m["role"] == "user" else "model", "parts": [m["content"]]} for m in session_history]
-        chat_session = gemini_model.start_chat(history=history)
-        response = chat_session.send_message(f"{dynamic_prompt}\n\nUser: {message}")
+        chat_session = model.start_chat(history=history)
+        response = chat_session.send_message(message)
         return response.text
     except Exception as e:
         logger.error(f"Gemini Error: {e}")
@@ -243,9 +331,8 @@ async def chat(req: ChatRequest, request: Request):
         save_lead_to_supabase(name, phone, lead_type, interest)
         cleaned += f"\n\nNoted! Visit: {STORE_URL}{STORE_ACTIONS.get(lead_type, '/store')}"
 
-    session_history = _get_or_create_session(req.session_id)
-    session_history.append({"role": "user", "content": req.message})
-    session_history.append({"role": "model", "content": cleaned})
+    save_chat_message(req.session_id, "user", req.message)
+    save_chat_message(req.session_id, "model", cleaned)
     
     return ChatResponse(reply=cleaned, lead_captured=lead_captured)
 
@@ -278,9 +365,8 @@ async def whatsapp_webhook(request: Request):
         save_lead_to_supabase(name, phone, lead_type, interest)
         cleaned += f"\n\nVisit: {STORE_URL}{STORE_ACTIONS.get(lead_type, '/store')}"
 
-    session_history = _get_or_create_session(session_id)
-    session_history.append({"role": "user", "content": incoming_msg})
-    session_history.append({"role": "model", "content": cleaned})
+    save_chat_message(session_id, "user", incoming_msg)
+    save_chat_message(session_id, "model", cleaned)
 
     resp = MessagingResponse()
     resp.message(cleaned)

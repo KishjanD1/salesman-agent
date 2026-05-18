@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bishal AI & Supabase Live Dashboard</title>
+    <title>Bishal AI - Shiva Shakti Mobile Center</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #1B65D6;
             --primary-dark: #114599;
-            --bg: #0B0F19; /* Sleek Dark Theme for Workspace */
-            --panel-bg: #141B2D;
-            --text-main: #F3F4F6;
-            --text-sub: #9CA3AF;
-            --border: rgba(255, 255, 255, 0.08);
-            --card-hover: rgba(255, 255, 255, 0.03);
-            --shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            --bg: #F4F6F9; /* Clean Light Slate/Off-white Theme for Workspace */
+            --panel-bg: #FFFFFF; /* White Dashboard panel background */
+            --text-main: #1F2937; /* Dark Charcoal for highly readable text */
+            --text-sub: #6B7280; /* Muted slate for subtitles */
+            --border: rgba(0, 0, 0, 0.08); /* Soft grey border */
+            --card-hover: rgba(0, 0, 0, 0.02);
+            --shadow: 0 20px 40px rgba(11, 15, 25, 0.08); /* Gentle clean shadow */
         }
 
         * {
@@ -23,6 +23,37 @@
             margin: 0;
             padding: 0;
             font-family: 'Inter', sans-serif;
+        }
+
+        /* Sleek Modern Light Scrollbars for Chat Window */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.12);
+            border-radius: 4px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            transition: background 0.2s;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.25);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+
+        /* Firefox support */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 0, 0, 0.12) rgba(0, 0, 0, 0.02);
         }
 
         body {
@@ -37,10 +68,8 @@
         }
 
         .workspace {
-            display: grid;
-            grid-template-columns: 420px 1fr;
             width: 100%;
-            max-width: 1300px;
+            max-width: 480px; /* Elegant standalone chat width */
             height: 100%;
             max-height: 780px;
             background: var(--panel-bg);
@@ -48,20 +77,22 @@
             box-shadow: var(--shadow);
             border: 1px solid var(--border);
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         /* ── CHAT PANEL ── */
         .chat-panel {
             display: flex;
             flex-direction: column;
-            border-right: 1px solid var(--border);
-            background: #101625;
+            background: #FFFFFF; /* Clean white backdrop */
             height: 100%;
+            flex: 1;
         }
 
         .chat-header {
             padding: 24px;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0, 0, 0, 0.02);
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
@@ -79,13 +110,13 @@
             color: white;
             font-weight: 800;
             font-size: 20px;
-            box-shadow: 0 0 20px rgba(27, 101, 214, 0.4);
+            box-shadow: 0 4px 12px rgba(27, 101, 214, 0.2);
         }
 
         .header-info h2 {
             font-size: 16px;
             font-weight: 700;
-            color: #FFFFFF;
+            color: var(--text-main);
         }
 
         .status-badge {
@@ -93,7 +124,7 @@
             align-items: center;
             gap: 6px;
             font-size: 11px;
-            color: #34D399;
+            color: #16A34A; /* Legible Forest Green for Light Background */
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
@@ -103,15 +134,15 @@
         .pulse-dot {
             width: 8px;
             height: 8px;
-            background-color: #34D399;
+            background-color: #16A34A;
             border-radius: 50%;
             animation: pulse 1.5s infinite;
         }
 
         @keyframes pulse {
-            0% { transform: scale(0.9); opacity: 1; box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
-            70% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
-            100% { transform: scale(0.9); opacity: 1; box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+            0% { transform: scale(0.9); opacity: 1; box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4); }
+            70% { transform: scale(1); opacity: 0.8; box-shadow: 0 0 0 6px rgba(22, 163, 74, 0); }
+            100% { transform: scale(0.9); opacity: 1; box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
         }
 
         .messages-area {
@@ -121,7 +152,7 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
-            background: rgba(0, 0, 0, 0.15);
+            background: #F8FAFC; /* Light Slate base for messages area */
         }
 
         .message {
@@ -135,10 +166,10 @@
 
         .message.bot {
             align-self: flex-start;
-            background: #1E293B;
-            color: #F3F4F6;
+            background: #E2E8F0; /* Modern soft gray chat bubble */
+            color: var(--text-main);
             border-bottom-left-radius: 4px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.04);
         }
 
         .message.user {
@@ -146,13 +177,14 @@
             background: var(--primary);
             color: white;
             border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 10px rgba(27, 101, 214, 0.15);
         }
 
         .lead-badge {
             margin-top: 8px;
             padding-top: 8px;
-            border-top: 1px solid rgba(16, 185, 129, 0.2);
-            color: #34D399;
+            border-top: 1px solid rgba(22, 163, 74, 0.15);
+            color: #16A34A;
             font-size: 11px;
             font-weight: 700;
             display: flex;
@@ -162,7 +194,7 @@
 
         .input-area {
             padding: 24px;
-            background: #101625;
+            background: #FFFFFF;
             border-top: 1px solid var(--border);
             display: flex;
             gap: 12px;
@@ -177,17 +209,18 @@
             width: 100%;
             padding: 14px 18px;
             border-radius: 14px;
-            background: #1E293B;
-            border: 1px solid var(--border);
-            color: white;
+            background: #F1F5F9; /* Very soft slate input area */
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            color: var(--text-main);
             outline: none;
             font-size: 14px;
             transition: all 0.2s;
         }
 
         input:focus {
+            background: #FFFFFF;
             border-color: var(--primary);
-            box-shadow: 0 0 10px rgba(27, 101, 214, 0.2);
+            box-shadow: 0 0 10px rgba(27, 101, 214, 0.15);
         }
 
         .send-btn {
@@ -199,203 +232,11 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(27, 101, 214, 0.2);
         }
 
         .send-btn:hover {
             background: var(--primary-dark);
-        }
-
-        /* ── DASHBOARD PANEL ── */
-        .db-panel {
-            display: flex;
-            flex-direction: column;
-            background: var(--panel-bg);
-            height: 100%;
-            overflow: hidden;
-        }
-
-        .db-header {
-            padding: 24px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .db-title-group h1 {
-            font-size: 18px;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #FFF, #9CA3AF);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .db-title-group p {
-            font-size: 12px;
-            color: var(--text-sub);
-            margin-top: 2px;
-        }
-
-        .db-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .btn-refresh {
-            background: #1E293B;
-            color: white;
-            border: 1px solid var(--border);
-            padding: 8px 16px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-
-        .btn-refresh:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255,255,255,0.2);
-        }
-
-        .db-status {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            background: rgba(16, 185, 129, 0.1);
-            color: #34D399;
-            padding: 6px 14px;
-            border-radius: 20px;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            font-weight: 600;
-        }
-
-        /* ── TABLE VIEW ── */
-        .db-content {
-            flex: 1;
-            overflow: hidden;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-
-        .leads-table-container {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            overflow-y: auto;
-            height: 100%;
-            min-height: 0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 13px;
-        }
-
-        th {
-            position: sticky;
-            top: 0;
-            background: #141B2D;
-            z-index: 10;
-            padding: 16px;
-            font-weight: 600;
-            color: var(--text-sub);
-            border-bottom: 1px solid var(--border);
-            text-transform: uppercase;
-            font-size: 11px;
-            letter-spacing: 0.05em;
-        }
-
-        td {
-            padding: 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-            color: var(--text-main);
-            vertical-align: middle;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tr:hover td {
-            background: var(--card-hover);
-        }
-
-        .badge-type {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: capitalize;
-        }
-
-        .badge-type.product_inquiry { background: rgba(59, 130, 246, 0.15); color: #60A5FA; }
-        .badge-type.emi_inquiry { background: rgba(245, 158, 11, 0.15); color: #FBBF24; }
-        .badge-type.repair_inquiry { background: rgba(16, 185, 129, 0.15); color: #34D399; }
-        .badge-type.exchange_inquiry { background: rgba(139, 92, 246, 0.15); color: #A78BFA; }
-
-        .time-col {
-            color: var(--text-sub);
-            font-size: 12px;
-        }
-
-        .loading-overlay {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px;
-            color: var(--text-sub);
-            font-size: 14px;
-            gap: 10px;
-        }
-
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-top: 2px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .empty-state {
-            padding: 60px 20px;
-            text-align: center;
-            color: var(--text-sub);
-        }
-
-        .empty-state svg {
-            width: 48px;
-            height: 48px;
-            color: var(--border);
-            margin-bottom: 16px;
-        }
-
-        .empty-state h3 {
-            color: white;
-            font-size: 16px;
-            margin-bottom: 6px;
-        }
-
-        .empty-state p {
-            font-size: 13px;
         }
 
         /* ── LOADING DOTS FOR CHAT ── */
@@ -421,12 +262,37 @@
             0%, 80%, 100% { transform: scale(0); }
             40% { transform: scale(1); }
         }
+
+        /* ── RESPONSIVE & MOBILE DESIGN ── */
+        @media (max-width: 520px) {
+            body {
+                padding: 10px;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            .workspace {
+                max-width: 100%;
+                height: 100%;
+                max-height: none;
+                border-radius: 16px;
+            }
+
+            .chat-header, .input-area {
+                padding: 16px;
+            }
+
+            .message {
+                max-width: 90%;
+                padding: 10px 14px;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="workspace">
-        <!-- ── LEFT: BISHAL AI CHAT PANEL ── -->
+        <!-- ── BISHAL AI CHAT PANEL ── -->
         <div class="chat-panel">
             <div class="chat-header">
                 <div class="avatar">B</div>
@@ -452,70 +318,16 @@
                 <button class="send-btn" id="send-btn">Send</button>
             </div>
         </div>
-
-        <!-- ── RIGHT: SUPABASE LIVE LEADS VIEW ── -->
-        <div class="db-panel">
-            <div class="db-header">
-                <div class="db-title-group">
-                    <h1 id="panel-title">Supabase Database Leads</h1>
-                    <p id="panel-desc">Real-time Captured Leads table (table: leads)</p>
-                </div>
-                <div class="db-actions">
-                    <div class="db-status">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-                        Connected
-                    </div>
-                    <button class="btn-refresh" id="btn-refresh">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
-                        Refresh
-                    </button>
-                </div>
-            </div>
-
-            <div class="db-content">
-                <!-- LEADS TABLE -->
-                <div class="leads-table-container" id="container-leads">
-                    <table id="leads-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Phone</th>
-                                <th>Lead Type</th>
-                                <th>Interest / Product</th>
-                                <th>Status</th>
-                                <th>Captured At</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leads-body">
-                            <!-- Injected dynamically -->
-                        </tbody>
-                    </table>
-                    
-                    <div class="loading-overlay" id="leads-loading">
-                        <div class="spinner"></div>
-                        <span>Loading leads from Supabase...</span>
-                    </div>
-
-                    <div class="empty-state" id="leads-empty" style="display: none;">
-                        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
-                        <h3>No leads captured yet</h3>
-                        <p>Share your name and phone number with Bishal AI on the left to test!</p>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>
         const API_URL = 'http://localhost:8000/api/chat';
-        const LEADS_URL = 'http://localhost:8000/api/leads';
         const API_KEY = 'gIUOmaMUwrnyyNAmcqvmc9RAnYtHVi6hR0E4j3UJzWM';
         const sessionId = 'test_' + Math.random().toString(36).substring(7);
 
         const messagesArea = document.getElementById('chat-messages');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
-        const refreshBtn = document.getElementById('btn-refresh');
 
         // ── CHAT ENGINE ──
         function appendMessage(role, text, leadCaptured = false) {
@@ -528,9 +340,6 @@
                 badge.className = 'lead-badge';
                 badge.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="display:inline;vertical-align:middle;margin-right:4px;"><path d="M20 6L9 17L4 12"/></svg>✓ Saved to Supabase (leads)';
                 div.appendChild(badge);
-                
-                // Auto-refresh the leads table when a lead is captured
-                setTimeout(fetchLeads, 1500);
             }
 
             messagesArea.appendChild(div);
@@ -581,62 +390,6 @@
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleSend();
         });
-
-        // ── FETCH LEADS ──
-        async function fetchLeads() {
-            const body = document.getElementById('leads-body');
-            const loading = document.getElementById('leads-loading');
-            const empty = document.getElementById('leads-empty');
-            
-            loading.style.display = 'flex';
-            body.innerHTML = '';
-            empty.style.display = 'none';
-
-            try {
-                const response = await fetch(LEADS_URL, {
-                    method: 'GET',
-                    headers: { 'X-API-Key': API_KEY }
-                });
-
-                if (!response.ok) throw new Error('Fetch failed');
-                const data = await response.json();
-                loading.style.display = 'none';
-
-                if (data.length === 0) {
-                    empty.style.display = 'block';
-                    return;
-                }
-
-                data.forEach(lead => {
-                    const tr = document.createElement('tr');
-                    const time = new Date(lead.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const date = new Date(lead.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' });
-
-                    tr.innerHTML = `
-                        <td style="font-weight: 600;">${escapeHtml(lead.name)}</td>
-                        <td>${escapeHtml(lead.phone)}</td>
-                        <td><span class="badge-type ${lead.lead_type}">${escapeHtml(lead.lead_type.replace('_', ' '))}</span></td>
-                        <td>${escapeHtml(lead.product_interest || '-')}</td>
-                        <td style="color: #34D399; font-weight: 600;">${escapeHtml(lead.status)}</td>
-                        <td class="time-col">${date}, ${time}</td>
-                    `;
-                    body.appendChild(tr);
-                });
-            } catch (error) {
-                loading.style.display = 'none';
-                body.innerHTML = `<tr><td colspan="6" style="text-align:center; color: #EF4444; padding: 30px;">Error connecting to leads table. Make sure backend is running.</td></tr>`;
-            }
-        }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
-
-        refreshBtn.addEventListener('click', fetchLeads);
-
-        // Initialize leads view
-        fetchLeads();
     </script>
 </body>
 </html>
